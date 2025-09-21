@@ -29,7 +29,7 @@ Before running the project, make sure you have:
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/your-username/zenstats-explorer.git
+git clone https://github.com/ngh1105/zenstats-explorer.git
 cd zenstats-explorer
 npm install
 ```
