@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ethers } from 'ethers';
-import { 
-  Card, 
-  CardContent, 
+import {
+  Card,
+  CardContent,
   Typography, 
   Box,
   CircularProgress,
@@ -16,6 +16,7 @@ import stakingABI from '../abi/stakingABI.json';
 // Contract configuration
 const STAKING_CONTRACT = "0x0000000000000000000000000000000000000800";
 const CONTRACT_ABI = stakingABI;
+const DEFAULT_RPC_URL = 'https://zenchain-testnet.api.onfinality.io/public';
 
 const TotalStaked = () => {
   const { provider } = useWallet();
@@ -23,17 +24,19 @@ const TotalStaked = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const fallbackProvider = useMemo(
+    () => new ethers.JsonRpcProvider(DEFAULT_RPC_URL),
+    []
+  );
+
   // Load total staked amount
-  const loadTotalStaked = async () => {
+  const loadTotalStaked = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      if (!provider) {
-        throw new Error('Wallet not connected');
-      }
-
-      const contract = new ethers.Contract(STAKING_CONTRACT, CONTRACT_ABI, provider);
+      const activeProvider = provider ?? fallbackProvider;
+      const contract = new ethers.Contract(STAKING_CONTRACT, CONTRACT_ABI, activeProvider);
 
       // Get current era
       const currentEra = await contract.activeEra();
@@ -53,14 +56,12 @@ const TotalStaked = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [provider, fallbackProvider]);
 
   // Load data when provider is available
   useEffect(() => {
-    if (provider) {
-      loadTotalStaked();
-    }
-  }, [provider]);
+    loadTotalStaked();
+  }, [loadTotalStaked]);
 
   return (
     <Card sx={{ 
